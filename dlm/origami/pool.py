@@ -4,17 +4,17 @@ import matplotlib
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 
-from .cadnano import Cadnano
-from .helix import Helix
-from .staple import Staple
-from .domain import Domain
-from .crossover import Crossover
-from .crosspair import CrossPair
-from .vertex import Vertex
-from .endpoints import Endpoints
+from dlm.origami.cadnano import Cadnano
+from dlm.origami.helix import Helix
+from dlm.origami.staple import Staple
+from dlm.origami.domain import Domain
+from dlm.origami.crossover import Crossover
+from dlm.origami.crosspair import CrossPair
+from dlm.origami.vertex import Vertex
+from dlm.origami.endpoints import Endpoints
 
-from .general import XY_SCALE, op_dict, default_colours, draw
-from ..common.myfuncs import circ_subtract
+from dlm.origami.general import XY_SCALE, op_dict, default_colours, draw
+from dlm.common.myfuncs import circ_subtract
 
 def ring_distance(a, b, mod):
     """
@@ -212,9 +212,9 @@ class Pool:
         for staple in self.staples:
             staple.domains.reverse()
             for i, domain in enumerate(staple.domains):
-                domain.set_staple_index(i)
+                domain.set_index_on_staple(i)
             for i, crossover in enumerate(staple.crossovers):
-                crossover.set_staple_index(i)
+                crossover.set_index_on_staple(i)
     # end def
     
     def create_helices(self):
