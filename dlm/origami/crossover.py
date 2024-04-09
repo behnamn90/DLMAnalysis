@@ -172,6 +172,9 @@ class Crossover:
         self._index = index
     # end def
         
+    def set_index_on_staple(self, index_on_staple):
+        self._index_on_staple = index_on_staple
+        
     def set_type(self, value):
         #if self.is_long and value != 'l':
             #raise ValueError(f'Crossover is long but setting {value} type.')
