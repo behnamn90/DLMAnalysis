@@ -71,12 +71,16 @@ class Pool:
         self.create_staples_domains_crossovers()
         self.link_staples_domains_crossovers()
         self.fill_domain_attributes() 
-        self.reorder_domains_staples_crossovers() # needs domain nucleotides to be set.
-        self._helices = self.create_helices() # needs domains to have idxLow (which they do after initialisation)
-        self._vertices = self.create_vertices() # needs domains to be ordered
+        # needs domain nucleotides to be set.
+        self.reorder_domains_staples_crossovers() 
+        # needs domains to have idxLow (which they do after initialisation)
+        self._helices = self.create_helices() 
+        # needs domains to be ordered
+        self._vertices = self.create_vertices() 
         self._seam_domains, self._edge_domains = self.fill_actual_edges()
         self.fill_crossover_types()
-        self._column_id_to_cadnano_col = {} # maps column id to cadnano column (a,b), where a is beginning of the column and b is the end
+        # maps column id to cadnano column (a,b), where a is beginning of the column and b is the end
+        self._column_id_to_cadnano_col = {} 
         self._edge_column_ids = list() # integer ids of the edge columns
         self._seam_column_ids = list() # integer ids of the seam columns (includes broken seams)
         self.find_column_ids() # sets the above three attributes

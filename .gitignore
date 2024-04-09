@@ -4,8 +4,14 @@
 # VS Code
 .vscode
 
+# PyCharm
+.idea
+
 # virtual environment
 .venv
+
+# pytest
+.pytest_cache
 
 # python bins
 *__pycache__*

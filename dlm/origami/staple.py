@@ -4,14 +4,11 @@ class Staple:
     def __init__(self, index, cadnano_path):
         self._index = index
         self._cadnano_path = cadnano_path # from 5p on staple to 3p on staple
-        # these are set by create_staples_domains_crossovers() 
+        # these are set by create_staples_domains_crossovers() in pool.py
         self._domains = list() # from 3' to 5' on staple because of legacy
         self._crossovers = list() # from 3' to 5' on staple because of legacy
+    # end def
 
-    def test(self):
-        print(self.ind, end='\t')
-        print(str([dom.ind for dom in self.domains]),end='\t')
-        print(str([dom.ind for dom in self.crossovers]),end='\n')
     def add_colour(self):
         #don't use
         colour = 'blue'
@@ -20,8 +17,9 @@ class Staple:
         elif len(self.domains)==3: colour = 'purple'
         self.colour = colour
         return colour
+    # end def
+    
     def add_path(self):
-        # This assumes domains are ordered from 3' to 5' on the staple
         path_data = []
         dom = self.domains[0]
         path_data.append((mpath.Path.MOVETO, dom.rpos.r1))
@@ -48,12 +46,16 @@ class Staple:
             path_data.append((mpath.Path.LINETO,dom.cpos.r2))
             codes, verts = zip(*path_data)
             self.cpath = mpath.Path(verts, codes)
+    # end def
+            
     def __str__(self):
         result = 'Staple '+str(self.ind)+': '
         for dom in self.domains: result+= str(dom.ind)+' '
         return result
+    # end def
 
     ### Getters ###
+    
     @property
     def index(self):
         return self._index
@@ -78,11 +80,15 @@ class Staple:
     # end def
 
     ### Setters ###
+
     def add_domain(self, domain):
         self._domains.append(domain)
+    # end def
 
     def add_crossover(self, crossover):
         self._crossovers.append(crossover)
+    # end def
 
     def set_index(self, index):
         self._index = index
+    # end def

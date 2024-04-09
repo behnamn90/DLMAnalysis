@@ -8,13 +8,13 @@ class Domain:
         self._cadnano_col_low = min((self._cadnano_path[0][1], self._cadnano_path[-1][1])) # the left idx from cadnano
         self._cadnano_col_high = max((self._cadnano_path[0][1], self._cadnano_path[-1][1])) # the right idx from cadnano
         
-        # these are set by link_staples_domains_crossovers()
+        # these are set by link_staples_domains_crossovers() in pool.py
         self._crossover_3p = None # the crossover at the 3' end of the domain (if it exists) (polarity on staple)
         self._crossover_5p = None # the crossover at the 5' end of the domain (if it exists) (polarity on staple)
         self._long_crossover = None # the long crossover (if it exists)
         self._staple = None # done
 
-        # these are set by fill_domain_attributes()
+        # these are set by fill_domain_attributes() in pool.py
         self._nuc_5p, self._nuc_3p = None, None # these are staple polarities
         self._index_on_scaffold = None
         self._length = None
@@ -22,16 +22,16 @@ class Domain:
         self._is_at_seam = None # whether the domain is at a seam (includes broken seams)
         self._is_at_edge = None # whether the domain is at an edge (includes single-domain staples)
 
-        # these are set by create_vertices()
+        # these are set by create_vertices() in pool.py
         self._vertex_5p = None 
         self._vertex_3p = None
 
-        # these are set by fill_actual_edges()
+        # these are set by fill_actual_edges() in pool.py
         self._actual_type = ''
         self._is_seam = None  # Only true if the domain is at a seam and not broken
         self._is_edge = None  # Only true if the domain has a crossover to another edge domain
         
-        # these are set by add_column_ids_to_domains()
+        # these are set by add_column_ids_to_domains() in pool.py
         self._col_ids = []
 
         self.alpha = 1
@@ -42,18 +42,16 @@ class Domain:
             elif self.n2 == other.n1 and self.n1 == other.n2: return True
             else: return False
         return False
+    # end def
+
     def __str__(self):
         result = 'Domain '+str(self.ind)+': '
         result+= str(self.n1)+'->'+str(self.n2)
         result+= ' ('+str(self.length)+')'
         result+= ' '+self.actual_type
         return result
-    def test(self):
-        print(str(self.ind)+'\t'+str(self.n1)+'-'+str(self.n2)+'\t'+str(self.v1.ind)+'-'+str(self.v2.ind)+'\t',end='')
-        print(str(self.staple.ind),end='\t')
-        print(str(self.vh)+'\t'+str(self.cols),end='\t')
-        #print(str(self.cr3p.ind)+','+str(self.cr5p.ind)+','+str(self.crLong.ind)+'\t'+
-        print(self.type+'\t'+str(self.is_seam)+'\t'+str(self.is_edge))
+    # end def
+
     def add_path(self):
         path_data = []
         path_data.append((mpath.Path.MOVETO,self.rpos.r1))
@@ -65,6 +63,7 @@ class Domain:
         path_data.append((mpath.Path.LINETO,self.cpos.r2))
         codes, verts = zip(*path_data)
         self.cpath = mpath.Path(verts, codes)
+    # end def
 
 
     ### Getters ###
