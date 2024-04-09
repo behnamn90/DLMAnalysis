@@ -7,7 +7,7 @@ class Helix:
 
     def test(self):
         print(str(self.ind)+'\t'+str([dom.ind for dom in self.domains]))
-        
+
     def __str__(self):
         result = 'Helix '+str(self.ind)
         return result
@@ -27,3 +27,10 @@ class Helix:
     def domains(self):
         return self._domains
     # end def
+
+    ### Setters ###
+    def add_domain(self, domain):
+        self._domains.append(domain)
+
+    def set_domains(self, domains):
+        self._domains = domains

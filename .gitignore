@@ -6,3 +6,8 @@
 
 # virtual environment
 .venv
+
+# Temporary
+input/
+tests/
+dlm/origami/abstract_object.py

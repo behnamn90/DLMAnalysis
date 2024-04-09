@@ -8,25 +8,34 @@ class Domain:
         self._cadnano_col_low = min((self._cadnano_path[0][1], self._cadnano_path[-1][1])) # the left idx from cadnano
         self._cadnano_col_high = max((self._cadnano_path[0][1], self._cadnano_path[-1][1])) # the right idx from cadnano
         
+        # these are set by link_staples_domains_crossovers()
+        self._crossover_3p = None # the crossover at the 3' end of the domain (if it exists) (polarity on staple)
+        self._crossover_5p = None # the crossover at the 5' end of the domain (if it exists) (polarity on staple)
+        self._long_crossover = None # the long crossover (if it exists)
+        self._staple = None # done
+
+        # these are set by fill_domain_attributes()
         self._nuc_5p, self._nuc_3p = None, None # these are staple polarities
         self._index_on_scaffold = None
         self._length = None
         self._domain_type = 'b' # (e)dge, (s)eam , (b)ody  [seam includes broken seams]
         self._is_at_seam = None # whether the domain is at a seam (includes broken seams)
-        self._is_at_edge = None
+        self._is_at_edge = None # whether the domain is at an edge (includes single-domain staples)
 
-        self._is_seam = None  # Only true if the domain is at a seam and not broken
+        # these are set by create_vertices()
+        self._vertex_5p = None 
+        self._vertex_3p = None
+
+        # these are set by fill_actual_edges()
         self._actual_type = ''
+        self._is_seam = None  # Only true if the domain is at a seam and not broken
+        self._is_edge = None  # Only true if the domain has a crossover to another edge domain
+        
+        # these are set by add_column_ids_to_domains()
+        self._col_ids = []
 
-        self.v1 = None # done
-        self.v2 = None # done
-        self.cr3p = None # done
-        self.cr5p = None # done
-        self.crLong = None # done
-        self.staple = None # done
-        self.cols = []
         self.alpha = 1
-        #self.test()
+
     def __eq__(self, other):
         if isinstance(other, Domain):
             if self.n1 == other.n1 and self.n2 == other.n2: return True
@@ -89,18 +98,23 @@ class Domain:
     # end def
 
     @property
+    def index_on_staple(self):
+        return self._index_on_staple
+    @property
     def s_index(self):
         return self._index_on_staple
     # end def
 
     @property
-    def ind(self):
-        return self._index_on_scaffold
-    # end def
-
-    @property
     def index_on_scaffold(self):
         return self._index_on_scaffold
+    @property
+    def ind(self):
+        return self._index_on_scaffold
+    @property
+    def index(self):
+        return self._index_on_scaffold
+    # end def
 
     @property
     def n1(self):
@@ -137,7 +151,7 @@ class Domain:
 
     @property
     def is_edge(self):
-        return self._is_at_edge
+        return self._is_edge
     # end def
 
     @property
@@ -158,6 +172,57 @@ class Domain:
     @property
     def type(self):
         return self._domain_type
+    # end def
+
+    @property
+    def crossover_3p(self):
+        return self._crossover_3p
+    @property
+    def cr3p(self):
+        return self._crossover_3p
+    # end def
+    
+    @property
+    def crossover_5p(self):
+        return self._crossover_5p
+    @property
+    def cr5p(self):
+        return self._crossover_5p
+    # end def
+
+    @property
+    def long_crossover(self):
+        return self._long_crossover
+    @property
+    def crLong(self):
+        return self._long_crossover
+
+    @property
+    def staple(self):
+        return self._staple
+    # end def
+
+    @property
+    def vertex_3p(self):
+        return self._vertex_3p
+    @property
+    def v1(self):
+        return self._vertex_3p
+
+    @property
+    def vertex_5p(self):
+        return self._vertex_5p
+    @property
+    def v2(self):
+        return self._vertex_5p
+    
+    @property
+    def col_ids(self):
+        return self._col_ids
+    @property
+    def cols(self):
+        return self._col_ids
+    # end def
 
     ### Setters ###
     def set_nucs(self, n5p, n3p):
@@ -174,14 +239,14 @@ class Domain:
         if value == 's':
             self.set_is_at_seam(True)
         elif value == 'e':
-            self.set_is_edge(True)
+            self.set_is_at_edge(True)
         elif value == 'b':
             self.set_is_at_seam(False)
-            self.set_is_edge(False)
+            self.set_is_at_edge(False)
         else:
             raise ValueError('Invalid domain type.')
         
-    def set_is_edge(self, value):
+    def set_is_at_edge(self, value):
         self._is_at_edge = value
     # end def
         
@@ -196,6 +261,26 @@ class Domain:
     def set_is_seam(self, value):
         self._is_seam = value
     # end def
+        
+    def set_is_edge(self, value):
+        self._is_edge = value
+    # end def
+        
+    def set_crossover_5p(self, value):
+        self._crossover_5p = value
+    # end def
+    
+    def set_crossover_3p(self, value):
+        self._crossover_3p = value
+    # end def
+        
+    def set_long_crossover(self, value):
+        self._long_crossover = value
+    # end def
+        
+    def set_staple(self, value):
+        self._staple = value
+    # end def
 
     def set_actual_type(self,value):
         self._actual_type = value
@@ -209,6 +294,29 @@ class Domain:
         else:
             raise ValueError('Invalid actual type.')
     # end def
+        
+    def set_vertex_5p(self, value):
+        self._vertex_5p = value
+    # end def
+    
+    def set_vertex_3p(self, value):
+        self._vertex_3p = value
 
+    def set_col_ids(self, value):
+        """
+        Set the column IDs for the domain.
+
+        Parameters:
+        - value: A list of column IDs.
+
+        Returns:
+        None
+        """
+        self._col_ids = value
+
+    def set_index_on_staple(self, value):
+        self._index_on_staple = value
+    def set_staple_index(self, value):
+        self._index_on_staple = value
     
     

@@ -3,10 +3,11 @@ import matplotlib.path as mpath
 class Staple:
     def __init__(self, index, cadnano_path):
         self._index = index
-        self._cadnano_path = cadnano_path
-        self._domains = list()
-        self._crossovers = list() # done
-        #self.test()
+        self._cadnano_path = cadnano_path # from 5p on staple to 3p on staple
+        # these are set by create_staples_domains_crossovers() 
+        self._domains = list() # from 3' to 5' on staple because of legacy
+        self._crossovers = list() # from 3' to 5' on staple because of legacy
+
     def test(self):
         print(self.ind, end='\t')
         print(str([dom.ind for dom in self.domains]),end='\t')
@@ -20,6 +21,7 @@ class Staple:
         self.colour = colour
         return colour
     def add_path(self):
+        # This assumes domains are ordered from 3' to 5' on the staple
         path_data = []
         dom = self.domains[0]
         path_data.append((mpath.Path.MOVETO, dom.rpos.r1))
@@ -51,13 +53,10 @@ class Staple:
         for dom in self.domains: result+= str(dom.ind)+' '
         return result
 
-    def add_domain(self, domain):
-        self._domains.append(domain)
-
-    def add_crossover(self, crossover):
-        self._crossovers.append(crossover)
-
     ### Getters ###
+    @property
+    def index(self):
+        return self._index
     @property
     def ind(self):
         return self._index
@@ -77,3 +76,13 @@ class Staple:
     def cadnano_path(self):
         return self._cadnano_path
     # end def
+
+    ### Setters ###
+    def add_domain(self, domain):
+        self._domains.append(domain)
+
+    def add_crossover(self, crossover):
+        self._crossovers.append(crossover)
+
+    def set_index(self, index):
+        self._index = index
