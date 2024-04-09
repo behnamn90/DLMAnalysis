@@ -22,7 +22,7 @@ def test_write_top(json_file):
 
     os.remove(generated_path)
 
-    assert generated_content == expected_content, f"The generated output for {pool_name} does not match the expected output."
+    assert generated_content == expected_content, f"The generated topology file for {pool_name} does not match the expected output."
 
 @pytest.mark.parametrize("json_file", json_files)
 def test_write_ops(json_file):
@@ -41,5 +41,5 @@ def test_write_ops(json_file):
 
     os.remove(generated_path)
 
-    assert generated_content == expected_content, f"The generated output for {pool_name} does not match the expected output."
+    assert generated_content == expected_content, f"The generated order parameter file for {pool_name} does not match the expected output."
 
