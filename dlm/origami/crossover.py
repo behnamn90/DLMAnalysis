@@ -18,7 +18,6 @@ class Crossover:
         self._type = '' # (i)nside, (o)utside, (l)ong, (s)eam ! needs to be set from pool
         
         self.alpha = 1
-        #self.test()
 
     def __eq__(self, other):
         if isinstance(other, Crossover):
@@ -26,11 +25,8 @@ class Crossover:
             elif self.n2 == other.n1 and self.n1 == other.n2: return True
             else: return False
         return False
-    def test(self):
-        print(str(self.ind)+'\t'+str(self.n1)+'-'+str(self.n2),end='\t')
-        print(str(self.d1.ind)+'-'+str(self.d2.ind),end='\t')
-        print(str(self.v1.ind)+'-'+str(self.v2.ind),end='\t')
-        print(str(self.staple.ind)+'\t'+str(self.type),end='\n')
+    # end def
+
     def add_path(self):
         path_data = []
         path_data.append((mpath.Path.MOVETO,self.rpos.r1))
@@ -60,7 +56,7 @@ class Crossover:
         path_data.append((mpath.Path.CURVE3,self.cpos.r2))
         codes, verts = zip(*path_data)
         self.cpath = mpath.Path(verts, codes)
-
+    # end def
 
     ### Setters ###
     def set_index_on_staple(self, index_on_staple):

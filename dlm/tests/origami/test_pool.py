@@ -7,6 +7,18 @@ json_files = [f for f in os.listdir(input_dir) if f.endswith('.json')]
 
 @pytest.mark.parametrize("json_file", json_files)
 def test_write_top(json_file):
+    """
+    Test function to verify the correctness of the generated topology file.
+
+    Args:
+        json_file (str): The name of the JSON file used to initialize the Pool object.
+
+    Raises:
+        AssertionError: If the generated topology file does not match the expected output.
+
+    Returns:
+        None
+    """
     pool_name = os.path.splitext(json_file)[0]
     json_path = os.path.join(input_dir, json_file)
     pool = Pool(json_path)
@@ -26,6 +38,18 @@ def test_write_top(json_file):
 
 @pytest.mark.parametrize("json_file", json_files)
 def test_write_ops(json_file):
+    """
+    Test function to verify the correctness of the write_OP_Oct19 method in the Pool class.
+
+    Parameters:
+    - json_file (str): The name of the JSON file used to initialize the Pool object.
+
+    Raises:
+    - AssertionError: If the generated order parameter file does not match the expected output.
+
+    Returns:
+    - None
+    """
     pool_name = os.path.splitext(json_file)[0]
     json_path = os.path.join(input_dir, json_file)
     pool = Pool(json_path)
