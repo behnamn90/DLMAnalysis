@@ -261,23 +261,25 @@ class Pool:
             if len(d1.staple.domains)>1 or len(d2.staple.domains)>1:
                 d1.set_is_edge(True)
                 d2.set_is_edge(True)
-
+        seam_cols = self._cadnano.seam_df.columns[self._cadnano.seam_df.any()].tolist()
         for domain in self._domains:
             domain.set_actual_type('b')
             if domain.is_at_edge:
-                if domain.crossover_3p != None:
-                    if domain.crossover_3p.domain_5p.is_at_edge:
+                if domain.crossover_3p != None: # cannot be single-domain
+                    if domain.crossover_3p.domain_5p.is_at_edge: # must have a crossover to another edge domain
                         domain.set_actual_type('e')
                 if domain.crossover_5p != None:
                     if domain.crossover_5p.domain_3p.is_at_edge:
                         domain.set_actual_type('e')
             if domain.is_at_seam:
-                if domain.crossover_3p != None:
-                    if domain.crossover_3p.domain_5p.is_at_seam:
-                        domain.set_actual_type('s')
+                if domain.crossover_3p != None: # cannot be single-domain
+                    if domain.crossover_3p.domain_5p.is_at_seam: # must have a crossover to another seam domain
+                        if domain.idx5p not in seam_cols: # the other end must not terminate at the seam (N2 types)
+                            domain.set_actual_type('s')
                 if domain.crossover_5p != None:
                     if domain.crossover_5p.domain_3p.is_at_seam:
-                        domain.set_actual_type('s')
+                        if domain.idx3p not in seam_cols:
+                            domain.set_actual_type('s')
         seam_doms = []
         edge_doms = []
         for domain in self.domains:
