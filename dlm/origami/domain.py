@@ -344,5 +344,7 @@ class Domain:
         self._index_on_staple = value
     def set_staple_index(self, value):
         self._index_on_staple = value
+
+    
     
     
