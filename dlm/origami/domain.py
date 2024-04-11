@@ -1,6 +1,33 @@
 import matplotlib.path as mpath
 
 class Domain:
+    """
+    Represents a domain in a cadnano design.
+
+    Attributes:
+    - cadnano_path: The path of the domain in cadnano, represented as a list of tuples from 5' to 3' on the staple.
+    - index_on_staple: The index of the domain on the staple.
+    - cadnano_col_low: The left index from cadnano.
+    - cadnano_col_high: The right index from cadnano.
+    - crossover_3p: The crossover at the 3' end of the domain (if it exists) (polarity on staple).
+    - crossover_5p: The crossover at the 5' end of the domain (if it exists) (polarity on staple).
+    - long_crossover: The long crossover (if it exists).
+    - staple: The staple that the domain belongs to.
+    - nuc_5p: The polarity of the 5' nucleotide on the staple.
+    - nuc_3p: The polarity of the 3' nucleotide on the staple.
+    - index_on_scaffold: The index of the domain on the scaffold.
+    - length: The length of the domain.
+    - domain_type: The type of the domain ('b' for body, 'e' for edge, 's' for seam).
+    - is_at_seam: Whether the domain is at a seam (includes broken seams).
+    - is_at_edge: Whether the domain is at an edge (includes single-domain staples).
+    - vertex_5p: The 5' vertex of the domain.
+    - vertex_3p: The 3' vertex of the domain.
+    - actual_type: The actual type of the domain.
+    - is_seam: Whether the domain is at a seam and not broken.
+    - is_edge: Whether the domain has a crossover to another edge domain.
+    - col_ids: The column IDs for the domain.
+    """
+    
     def __init__(self, cadnano_path, index_on_staple):
         assert all(x[0] == cadnano_path[0][0] for x in cadnano_path), 'All virtual helix must be the same.'
         self._cadnano_path = cadnano_path # list of tuples from 5' to 3' on staple
