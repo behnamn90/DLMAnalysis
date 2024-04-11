@@ -1,8 +1,16 @@
 # DLMAnalysis
-Analysis tools for domain-level model simulations.
+Analysis tools for domain-level model (DLM) simulations. This is an accompanying package for the main DLM code, which is written in C++:<br>
+https://github.com/behnamn90/DLM
+
+Together, they are used to produce all the results in my doctoral thesis:<br>
+https://ora.ox.ac.uk/objects/uuid:23ca884b-f547-4458-9e43-494fd6c2f6a3
 
 
-# Cadnano
-Unfortuantely, the cadnano module only works with python 3.6. This is depreciated and doesn't work on M1 Macs. There is a workaround here using `pyenv` with Rosetta:
-https://stackoverflow.com/questions/71862398/install-python-3-6-on-mac-m1
+## Functionalities:
+- Convert cadnano files (https://cadnano.org/) to input files used in DLM simulations.
+- Run batch DLM simulations (requires excecutable from C++ code).
+- Analyse and visualise batch simulation results; these are large datasets that describe DNA origami trajectories.
+
+## Usage:
+See the `demo.ipynb` for some basic usage. Note that the project is designed to run on computer clusters and produce massive amounts of data. Some pre-analysed data is included here to demonstrate the usage.
 

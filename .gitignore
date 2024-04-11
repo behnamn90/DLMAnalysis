@@ -16,6 +16,10 @@
 # python bins
 *__pycache__*
 
+# temporary outputs
+demo_output/
+
 # Temporary
 input/
 dlm/origami/abstract_object.py
+
