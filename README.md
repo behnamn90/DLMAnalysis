@@ -12,5 +12,5 @@ https://ora.ox.ac.uk/objects/uuid:23ca884b-f547-4458-9e43-494fd6c2f6a3
 - Analyse and visualise batch simulation results; these are large datasets that describe DNA origami trajectories.
 
 ## Usage:
-See the `demo.ipynb` for some basic usage. Note that the project is designed to run on computer clusters and produce massive amounts of data. Some pre-analysed data is included here to demonstrate the usage.
+See the `demo.ipynb` for some basic usage. Note that the project is designed to run on computer clusters and produces large datasets. Some pre-analysed data is included here to demonstrate the usage.
 
