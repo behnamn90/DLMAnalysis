@@ -156,8 +156,8 @@ class Cadnano:
         with open(file_path, 'r') as file:
             data = json.load(file)
         instance._json_file_name = data['name']
-        if instance._json_file_name != instance.json_file_path.split("/")[-1]:
-            warnings.warn('File name and path do not match', UserWarning)
+        #if instance._json_file_name != instance.json_file_path.split("/")[-1]:
+            #warnings.warn('File name and path do not match', UserWarning)
         instance._scaffold_df, instance._staple_df, instance._skip_df = parse_json_data(data['vstrands'])
         instance._scaffold_path, instance._staple_paths = instance.get_oligo_paths()
         #instance._staple_colors = get_staple_colors(data['vstrands'], instance._staple_paths)

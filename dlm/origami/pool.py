@@ -1,7 +1,5 @@
 import os
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 from collections import OrderedDict
 
 from dlm.origami.cadnano import Cadnano
@@ -15,6 +13,13 @@ from dlm.origami.endpoints import Endpoints
 
 from dlm.origami.general import XY_SCALE, op_dict, default_colours, draw
 from dlm.common.myfuncs import circ_subtract
+
+# for drawing purposes
+import matplotlib
+import matplotlib.pyplot as plt
+from dlm.origami.general import default_colours
+from dlm.origami.general import default_colour_names
+
 
 def ring_distance(a, b, mod):
     """
@@ -48,7 +53,7 @@ here_path = os.getcwd()
 
 class Pool:
     """
-    Represents a pool of origami structures.
+    Represents a set of staples that fold the origami structure.
 
     Args:
         json_file_path (str): The path to the JSON file containing the origami structure.
@@ -850,6 +855,28 @@ class Pool:
             ax.add_patch(patch)
             if labelled: ax.text(pos.center[0], pos.center[1], str(staple.ind), fontsize=8)
 
+    def draw_default(self,ax,layout='rect'):
+        self.add_pos()
+        self.set_default_colors()
+        self.draw_scaffold(ax)
+        self.draw_staples(ax)
+
+        custom_lines = [matplotlib.lines.Line2D([0], [0], color=default_colours[0], lw=3)]
+        custom_names = default_colour_names[:1]
+        for n_domains in self.staple_types:
+            custom_lines.append(matplotlib.lines.Line2D([0], [0], color=default_colours[n_domains], lw=3))
+            custom_names.append(default_colour_names[n_domains])
+        legend_cols = 2
+        if len(self.staple_types) % 2 == 0: legend_cols = 3
+        ax.legend(custom_lines, custom_names,
+                loc='upper center', bbox_to_anchor=(0.5, 0), ncol=legend_cols,
+                fontsize='12', handlelength=0.5,
+                labelspacing=0.5, handletextpad=0.6,
+                frameon=False, columnspacing=1)
+        ax.autoscale()
+        ax.set_aspect('equal', adjustable='box')
+        ax.set_axis_off()
+
     ### File Writers ###
     
     def help_top(self,myfile):
@@ -888,6 +915,8 @@ class Pool:
     def write_top_Oct19(self,out_path):
         with open(out_path,'w') as myfile:
             self.help_top(myfile)
+    # alias
+    write_topology = write_top_Oct19
 
     def help_OPs(self,myfile):
         if len(self.domains) != len(self.staples):
@@ -971,6 +1000,7 @@ class Pool:
             self.help_OPs(myfile)
 
 
+
 if __name__ == '__main__':
     file_path = '/Users/behnamnajafi/Code/DLM/DLM2/Run/Input/JSONs/RcU.json'
-    pool = Pool(file_path)
+    self = Pool(file_path)
