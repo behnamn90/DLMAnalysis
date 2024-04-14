@@ -18,21 +18,7 @@ july19_dir_structure = [item for item in default_dir_structure if item != 'RateM
 june19_dir_structure = [item for item in july19_dir_structure if item != 'k_plus']
 
 dir_structures = [default_dir_structure, july19_dir_structure, june19_dir_structure]
-
-def parse_hydra_path(path):
-    split_path = path.split('/')
-    root_directory = '/'.join(split_path[0:5])
-    actual_dir_structure = None
-    for dir_structure in dir_structures:
-        if len(split_path[5:]) == len(dir_structure):
-            actual_dir_structure = dir_structure
-            return root_directory, actual_dir_structure
-    if actual_dir_structure is None:
-        raise ValueError('Could not parse path: ' + path)
     
-
-
-
 SetX = {
         'RootDir' : '',
         'DirStructure' : default_dir_structure,

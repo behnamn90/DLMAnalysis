@@ -1,9 +1,62 @@
 from dlm.defs.general import scaffold_file_names, Limits
 from dlm.defs.hydra import default_dir_structure, july19_dir_structure, june19_dir_structure
-from dlm.defs.hydra import parse_hydra_path
-from dlm.defs.hydra import SetX
 
-input_dictionary_keys = list(SetX.keys())
+input_dictionary_template = {
+        'RootDir' : str, 
+        'DirStructure' : list,
+        'RateMethod': str,
+        'Scaffold' : str,
+        'k_plus' : str,
+        'Topology' : str,
+        'RateModel' : str,
+        'Conc' : str,
+        'PRot' : str,
+        'SRot' : str,
+        'Gamma' : str,
+        'n_param' : str,
+        'Missing' : str,
+        'Ramp' : tuple,
+        'Temp' : tuple,
+        'US' : str,
+        'Window' : str,
+        'Weight' : str,
+        'Cluster' : str,
+        'Seed' : str}
+
+def input_dictionary_is_valid(mydict, keytypes):
+    # Check for missing keys
+    missing_keys = [key for key in keytypes if key not in mydict]
+    if missing_keys:
+        raise ValueError(f"Missing keys: {missing_keys}")
+
+    # Check for type mismatches
+    type_mismatches = [
+        key for key in mydict if not isinstance(mydict[key], keytypes.get(key))
+    ]
+    if type_mismatches:
+        raise TypeError(f"Type mismatches for keys: {type_mismatches}")
+
+    # If all keys are present and types match
+    return True
+
+def find_matching_directory_structure(input_dir_values, dir_structures = 
+                                      [default_dir_structure, july19_dir_structure, june19_dir_structure]):
+    """
+    Finds the matching directory structure.
+    If the number of elements match one of the predefined directory structures,
+    then that structure is returned.
+    Args:
+        input_dir_values (str): list of strings made up of the split path after the root directory.
+    """
+    actual_dir_structure = None
+    for dir_structure in dir_structures:
+        if len(input_dir_values) == len(dir_structure):
+            actual_dir_structure = dir_structure
+            break
+    if actual_dir_structure is None:
+        raise ValueError('Could not match to any directory structure.')
+    else:
+        return actual_dir_structure
 
 class Seed:
     def __init__(self):
@@ -14,9 +67,9 @@ class Seed:
 
         self._RootDir = '' # includes the code version on hydra
         self._DirStructure = []  # specifies the order of other keys in the directory structure
-        self._RateMethod = ''  
+        self._RateMethod = ''  # must be specified for June19, July19-Oct19 paths. 
         self._Scaffold = ''  
-        self._k_plus = ''  
+        self._k_plus = ''  # must be specified for June19 paths.
         self._Topology = ''  
         self._RateModel = ''
         self._Conc = ''  
@@ -25,18 +78,18 @@ class Seed:
         self._Gamma = ''  
         self._n_param = ''  
         self._Missing = ''  
-        self._Ramp = () # tuple
-        self._Temp = () # tuple  
+        self._Ramp = () # tuple in input dictionary but not in path
+        self._Temp = () # tuple in input dictionary but not in path  
         self._US = '' 
         self._Window = ''  
         self._Weight = ''  
         self._Cluster = '' 
         self._Seed = ''  
 
-        self._Init = ''
-        self._SimType = ''
-        self._TempRate = ''
-        self._dT = ''
+        self._Init = '' # not in the input dictionary but in the path
+        self._SimType = '' # not in the input dictionary but in the path
+        self._TempRate = '' # not in the input dictionary but in the path
+        self._dT = '' # not in the input dictionary but in the path
 
         self.input_file = "input.py"
         self.missing_file = "Missing.txt"
@@ -62,20 +115,19 @@ class Seed:
         Raises:
             ValueError: If the dictionary does not contain the correct keys.
         """
-        if set(d.keys()) != set(SetX.keys()):
+        if not input_dictionary_is_valid(d, input_dictionary_template):
             raise ValueError('The dictionary does not contain the correct keys.')
         instance = cls()
-        for key, val in d.items():
+        instance._dictionary = {k: v for k, v in d.items()}
+        instance._dictionary['Init'] = instance._dictionary['Ramp'][0]
+        instance._dictionary['SimType'] = instance._dictionary['Ramp'][1]
+        instance._dictionary['TempRate'] = instance._dictionary['Temp'][0]
+        instance._dictionary['dT'] = instance._dictionary['Temp'][1]
+        for key, val in instance._dictionary.items():
             setattr(instance, '_'+key, val)
-        instance._dictionary = {k: v for k, v in d.items() if k not in ['DirStructure', 'RootDir']}
-        # set dependent variables
-        instance._Init = instance._Ramp[0]
-        instance._SimType = instance._Ramp[1]
-        instance._TempRate = instance._Temp[0]
-        instance._dT = instance._Temp[1]
         instance.set_dependent_variables()
-        instance._path = '/'.join([instance._RootDir] + [instance.__getattribute__(key) for key in instance._DirStructure])
-        instance._full_name = '_'.join([instance.__getattribute__(key) for key in default_dir_structure])
+        instance._path = '/'.join([instance._RootDir] + [instance._dictionary[key] for key in instance._DirStructure])
+        instance._full_name = '_'.join([instance._dictionary[key] for key in default_dir_structure])
         return instance
 
     @classmethod
@@ -94,32 +146,20 @@ class Seed:
         instance = cls()
         instance._path = path
         split_path = path.split('/')
-        instance._RootDir = '/'.join(split_path[0:5])
-        actual_dir_structure = None
-        dir_structures = [default_dir_structure, july19_dir_structure, june19_dir_structure]
-        for dir_structure in dir_structures:
-            if len(split_path[5:]) == len(dir_structure):
-                actual_dir_structure = dir_structure
-                break
-        if actual_dir_structure is None:
-            raise ValueError('Could not parse path: ' + path)
-        else:
-            instance._DirStructure = actual_dir_structure
-        instance._dictionary = {key: val for key, val in zip(instance._DirStructure, split_path[5:])}
-        if 'k_plus' not in instance._DirStructure:
+        instance._dictionary['RootDir'] = '/'.join(split_path[0:5])
+        instance._dictionary['DirStructure'] = find_matching_directory_structure(split_path[5:])
+        for key, val in zip(instance._dictionary['DirStructure'], split_path[5:]):
+            instance._dictionary[key] = val
+        if 'k_plus' not in instance._dictionary['DirStructure']:
             instance._dictionary['k_plus'] = '500'
-        if 'RateMethod' not in instance._DirStructure:
+        if 'RateMethod' not in instance._dictionary['DirStructure']:
             instance._dictionary['RateMethod'] = 'custom'
+        instance._dictionary['Ramp'] = (instance._dictionary['Init'], instance._dictionary['SimType'])
+        instance._dictionary['Temp'] = (instance._dictionary['TempRate'], instance._dictionary['dT'])
         for key, val in instance._dictionary.items():
             setattr(instance, '_'+key, val)
-        # set dependent variables
-        instance._Ramp = (instance._Init, instance._SimType)
-        instance._Temp = (instance._TempRate, instance._dT)
-        instance._dictionary['Ramp'] = instance._Ramp
-        instance._dictionary['Temp'] = instance._Temp
-        instance._dictionary = {k:v for k,v in instance._dictionary.items() if k not in ['Init', 'SimType', 'TempRate', 'dT']}
         instance.set_dependent_variables()
-        instance._full_name = '_'.join([instance.__getattribute__(key) for key in default_dir_structure])
+        instance._full_name = '_'.join([instance._dictionaty[key] for key in default_dir_structure])
         return instance
 
     @classmethod
@@ -169,6 +209,14 @@ class Seed:
     
     @property
     def Set(self):
+        """
+        Legacy method. Gives the reduced version of the dictionary.
+        """
+        return {k:v for k,v in self._dictionary.items() 
+            if k not in ['DirStructure', 'RootDir', 'Init', 'SimType', 'TempRate', 'dT']}
+    
+    @property
+    def dictionary(self):
         return self._dictionary
     
     @property

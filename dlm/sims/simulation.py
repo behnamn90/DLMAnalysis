@@ -1,6 +1,5 @@
 from dlm.sims.seed import Seed
-from dlm.defs.hydra import default_dir_structure, july19_dir_structure, june19_dir_structure
-from dlm.defs.hydra import SetX
+from dlm.defs.hydra import default_dir_structure
 import os
 
 def find_seeds_with_output(path):
@@ -70,19 +69,17 @@ class Simulation:
         Raises:
             ValueError: If the dictionary does not contain the correct keys.
         """
-        if set(d.keys()) != set(SetX.keys()):
-            raise ValueError('The dictionary does not contain the correct keys.')
         instance = cls()
-        instance._dictionary = {k: v for k, v in d.items() if k not in ['DirStructure', 'RootDir']}
-        for key, val in d.items():
+        dummy_d = dict(d)
+        dummy_d['Seed'] = dummy_d['Seed'][0]
+        dummy_seed = Seed.from_dict(dummy_d)
+        instance._dictionary = dummy_seed.dictionary
+        instance._dictionary['DirStructure'] = instance._dictionary['DirStructure'][:-1]
+        instance._dictionary['Seed'] = d['Seed']
+        for key, val in instance._dictionary.items():
             setattr(instance, '_'+key, val)
-        # set dependent variables
-        instance._Init = instance._Ramp[0]
-        instance._SimType = instance._Ramp[1]
-        instance._TempRate = instance._Temp[0]
-        instance._dT = instance._Temp[1]
-        instance._path = '/'.join([instance._RootDir] + [instance.__getattribute__(key) for key in instance._DirStructure[:-1]])
-        instance._full_name = '_'.join([instance.__getattribute__(key) for key in default_dir_structure[:-1]])
+        instance._path = '/'.join([instance._RootDir] + [instance._dictionary[key] for key in instance._DirStructure[:-1]])
+        instance._full_name = '_'.join([instance._dictionary[key] for key in default_dir_structure[:-1]])
         instance._seeds = instance.add_seeds_by_parent()
         return instance
     
@@ -98,34 +95,16 @@ class Simulation:
             Simulation: An instance of the Simulation class.
         """
         instance = cls()
-        instance._path = path
-        split_path = path.split('/')
-        instance._RootDir = '/'.join(split_path[0:5])
-        actual_dir_structure = None
-        dir_structures = [default_dir_structure[:-1], july19_dir_structure[:-1], june19_dir_structure[:-1]]
-        for dir_structure in dir_structures:
-            if len(split_path[5:]) == len(dir_structure):
-                actual_dir_structure = dir_structure
-                break
-        if actual_dir_structure is None:
-            raise ValueError('Could not parse path: ' + path)
-        else:
-            instance._DirStructure = actual_dir_structure
-        instance._dictionary = {key: val for key, val in zip(instance._DirStructure, split_path[5:])}
-        if 'k_plus' not in instance._DirStructure:
-            instance._dictionary['k_plus'] = '500'
-        if 'RateMethod' not in instance._DirStructure:
-            instance._dictionary['RateMethod'] = 'custom'
-        for key, val in instance._dictionary.items():
-            setattr(instance, '_'+key, val)
+        # create a dummy seed so that we can access the dictionary
+        dummy_seed = Seed.from_hydra_path(path+'/1')
+        instance._dictionary = dummy_seed.dictionary
+        instance._dictionary['DirStructure'] = instance._dictionary['DirStructure'][:-1]
         seeds_dirs = find_seeds_with_output(path)
         instance._dictionary['Seed'] = seeds_dirs
-        instance._Ramp = (instance._Init, instance._SimType)
-        instance._Temp = (instance._TempRate, instance._dT)
-        instance._dictionary['Ramp'] = instance._Ramp
-        instance._dictionary['Temp'] = instance._Temp
-        instance._dictionary = {k:v for k,v in instance._dictionary.items() if k not in ['Init', 'SimType', 'TempRate', 'dT']}
-        instance._full_name = '_'.join([instance.__getattribute__(key) for key in default_dir_structure[:-1]])
+        for key, val in instance._dictionary.items():
+            setattr(instance, '_'+key, val)
+        instance._path = path
+        instance._full_name = '_'.join([instance._dictionary[key] for key in default_dir_structure[:-1]])
         instance._seeds = instance.add_seeds_by_parent()
         return instance
 
@@ -145,6 +124,18 @@ class Simulation:
     
     def set_name(self, comps):
         self._reduced_name = '_'.join(self.__getattribute__(key) for key in comps)
+
+    @property
+    def Set(self):
+        """
+        Legacy method. Gives the reduced version of the dictionary.
+        """
+        return {k:v for k,v in self._dictionary.items() 
+            if k not in ['DirStructure', 'RootDir', 'Init', 'SimType', 'TempRate', 'dT']}
+    
+    @property
+    def dictionary(self):
+        return self._dictionary
 
     @property
     def path(self):
@@ -245,6 +236,8 @@ class Simulation:
 if __name__ == '__main__':
     sample_path = '/Volumes/Sam980/Hydra/June19/average/RcUa/local/C100/R0/S0/2.5/2/M0/empty/anneal/1/30/false/W0/w0/false'
     sim = Simulation.from_hydra_path(sample_path)
+    print(sim.full_name)
+    print([seed.Seed for seed in sim.seeds])
     sample_dict = {
         'RootDir': '/Volumes/Sam980/Hydra/June19',
         'DirStructure': ['Scaffold', 'Topology', 'RateModel', 'Conc', 'PRot', 'SRot', 'Gamma', 'n_param', 'Missing', 'Init', 'SimType', 'TempRate', 'dT', 'US', 'Window', 'Weight', 'Cluster'],
@@ -272,8 +265,8 @@ if __name__ == '__main__':
     #print(sim._RootDir)
     print(sim.full_name)
     print([seed.Seed for seed in sim.seeds])
-    for seed in sim.seeds:
-        print(seed.full_name)
+    #for seed in sim.seeds:
+        #print(seed.full_name)
     #print(sim.path)
     #print(sim.Set)
     #print([seed.full_name for seed in sim.seeds])
