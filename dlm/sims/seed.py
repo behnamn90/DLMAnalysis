@@ -1,7 +1,7 @@
 from dlm.defs.general import scaffold_file_names, Limits
 from dlm.defs.hydra import default_dir_structure, july19_dir_structure, june19_dir_structure
 
-input_dictionary_template = {
+input_dictionary_dtypes = {
         'RootDir' : str, 
         'DirStructure' : list,
         'RateMethod': str,
@@ -54,7 +54,7 @@ def find_matching_directory_structure(input_dir_values, dir_structures =
             actual_dir_structure = dir_structure
             break
     if actual_dir_structure is None:
-        raise ValueError('Could not match to any directory structure.')
+        raise ValueError(f'Could not match to any directory structure: {input_dir_values}')
     else:
         return actual_dir_structure
 
@@ -115,7 +115,7 @@ class Seed:
         Raises:
             ValueError: If the dictionary does not contain the correct keys.
         """
-        if not input_dictionary_is_valid(d, input_dictionary_template):
+        if not input_dictionary_is_valid(d, input_dictionary_dtypes):
             raise ValueError('The dictionary does not contain the correct keys.')
         instance = cls()
         instance._dictionary = {k: v for k, v in d.items()}
@@ -159,7 +159,7 @@ class Seed:
         for key, val in instance._dictionary.items():
             setattr(instance, '_'+key, val)
         instance.set_dependent_variables()
-        instance._full_name = '_'.join([instance._dictionaty[key] for key in default_dir_structure])
+        instance._full_name = '_'.join([instance._dictionary[key] for key in default_dir_structure])
         return instance
 
     @classmethod
@@ -177,7 +177,7 @@ class Seed:
 
         """
         instance = cls()
-        instance._dictionary = simulation.Set
+        instance._dictionary = dict(simulation.dictionary)
         instance._dictionary['Seed'] = seed_number
         for key, val in instance._dictionary.items():
             setattr(instance, '_'+key, val)
@@ -207,13 +207,16 @@ class Seed:
         if (self._Init == 'conf_file'):
             self.conf_file = self._Topology+"_"+str(int((Limits[self._Topology][self._Window]["High"]+Limits[self._Topology][self._Window]["Low"])/2))+"_D.conf"
     
+    def set_reduced_name(self, parent_name):
+        self._reduced_name = '_'.join([parent_name,self._Seed])
+
     @property
     def Set(self):
         """
         Legacy method. Gives the reduced version of the dictionary.
         """
         return {k:v for k,v in self._dictionary.items() 
-            if k not in ['DirStructure', 'RootDir', 'Init', 'SimType', 'TempRate', 'dT']}
+            if k not in ['DirStructure', 'RootDir', 'Ramp', 'Temp']}
     
     @property
     def dictionary(self):

@@ -1,6 +1,7 @@
 from dlm.sims.seed import Seed
 from dlm.defs.hydra import default_dir_structure
 import os
+import copy
 
 def find_seeds_with_output(path):
     seeds_with_output = []  # List to store directories with an 'Output' subdirectory
@@ -26,7 +27,7 @@ class Simulation:
         self._reduced_name = ''
         self._seeds = []
 
-        self._reduced_name = ''
+        self._reduced_name = '' # set by SimulationSet -> Simulation.set_name()
 
         self._RootDir = '' # includes the code version on hydra
         self._DirStructure = []  # specifies the order of other keys in the directory structure
@@ -56,12 +57,12 @@ class Simulation:
         self._dT = ''
 
     @classmethod
-    def from_dict(cls, d: 'dict[str, str]') -> 'Simulation':
+    def from_dict(cls, d: 'dict') -> 'Simulation':
         """
         Create a Simulation instance from a dictionary.
 
         Args:
-            d (dict[str, str]): A dictionary containing the simulation information.
+            d (dict): A dictionary containing the simulation information.
 
         Returns:
             Simulation: An instance of the Simulation class.
@@ -95,11 +96,14 @@ class Simulation:
             Simulation: An instance of the Simulation class.
         """
         instance = cls()
+        seeds_dirs = find_seeds_with_output(path)
         # create a dummy seed so that we can access the dictionary
-        dummy_seed = Seed.from_hydra_path(path+'/1')
+        try:
+            dummy_seed = Seed.from_hydra_path(path+'/'+seeds_dirs[0])
+        except:
+            print(f'Could not create dummy seed: {path}')
         instance._dictionary = dummy_seed.dictionary
         instance._dictionary['DirStructure'] = instance._dictionary['DirStructure'][:-1]
-        seeds_dirs = find_seeds_with_output(path)
         instance._dictionary['Seed'] = seeds_dirs
         for key, val in instance._dictionary.items():
             setattr(instance, '_'+key, val)
@@ -122,8 +126,12 @@ class Simulation:
             sims.append(Seed.from_dict(newDict))
         return sims
     
-    def set_name(self, comps):
-        self._reduced_name = '_'.join(self.__getattribute__(key) for key in comps)
+    def set_reduced_name(self, comps):
+        comp_values = [self._dictionary['Window'].split('-')[0] if comp == 'Window' 
+                       else self._dictionary[comp] for comp in comps]
+        self._reduced_name = '_'.join(comp_values)
+        for seed in self._seeds:
+            seed.set_reduced_name(self._reduced_name)
 
     @property
     def Set(self):
@@ -131,7 +139,7 @@ class Simulation:
         Legacy method. Gives the reduced version of the dictionary.
         """
         return {k:v for k,v in self._dictionary.items() 
-            if k not in ['DirStructure', 'RootDir', 'Init', 'SimType', 'TempRate', 'dT']}
+            if k not in ['DirStructure', 'RootDir', 'Ramp', 'Temp']}
     
     @property
     def dictionary(self):
@@ -234,10 +242,11 @@ class Simulation:
     
 
 if __name__ == '__main__':
-    sample_path = '/Volumes/Sam980/Hydra/June19/average/RcUa/local/C100/R0/S0/2.5/2/M0/empty/anneal/1/30/false/W0/w0/false'
+    sample_path = '/Volumes/Sam980/Hydra/June19/average/RcUa/local/C100/R0/S0/2.5/2/M0/empty/anneal/10/30/false/W0/w0/false'
     sim = Simulation.from_hydra_path(sample_path)
     print(sim.full_name)
-    print([seed.Seed for seed in sim.seeds])
+    print(sim.dictionary['Seed'])
+    #print([seed.Seed for seed in sim.seeds])
     sample_dict = {
         'RootDir': '/Volumes/Sam980/Hydra/June19',
         'DirStructure': ['Scaffold', 'Topology', 'RateModel', 'Conc', 'PRot', 'SRot', 'Gamma', 'n_param', 'Missing', 'Init', 'SimType', 'TempRate', 'dT', 'US', 'Window', 'Weight', 'Cluster'],
@@ -263,8 +272,8 @@ if __name__ == '__main__':
     sim = Simulation.from_dict(sample_dict)
 
     #print(sim._RootDir)
-    print(sim.full_name)
-    print([seed.Seed for seed in sim.seeds])
+    #print(sim.full_name)
+    #print([seed.Seed for seed in sim.seeds])
     #for seed in sim.seeds:
         #print(seed.full_name)
     #print(sim.path)
