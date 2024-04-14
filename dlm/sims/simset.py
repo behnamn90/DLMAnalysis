@@ -130,7 +130,7 @@ class SimulationSet:
         self._SRot = []  
         self._Gamma = []  
         self._n_param = []  
-        self._Missing = []  
+        self._Missing = []
         self._Ramp = []
         self._Temp = []
         self._US = []
@@ -204,6 +204,7 @@ class SimulationSet:
     def super_dictionary(self):
         return self._super_dictionary
 
+
 if __name__ == '__main__':
     from dlm.defs.hydra import default_dir_structure, june19_dir_structure
     sample_dict = {
@@ -251,6 +252,7 @@ if __name__ == '__main__':
 
     simset = SimulationSet.from_dictionaries([sample_dict,sample_dict2])
     #simset = SimulationSet.from_hydra_path('/Volumes/Sam980/Hydra/June19')
+    simset = SimulationSet.from_dictionary(sample_dict)
     print(len(simset._simulations))
     print(simset.super_dictionary)
     #print(len(simset._simulations))

@@ -243,9 +243,9 @@ class Simulation:
 
 if __name__ == '__main__':
     sample_path = '/Volumes/Sam980/Hydra/June19/average/RcUa/local/C100/R0/S0/2.5/2/M0/empty/anneal/10/30/false/W0/w0/false'
-    sim = Simulation.from_hydra_path(sample_path)
-    print(sim.full_name)
-    print(sim.dictionary['Seed'])
+    #sim = Simulation.from_hydra_path(sample_path)
+    #print(sim.full_name)
+    #print(sim.dictionary['Seed'])
     #print([seed.Seed for seed in sim.seeds])
     sample_dict = {
         'RootDir': '/Volumes/Sam980/Hydra/June19',
@@ -269,13 +269,4 @@ if __name__ == '__main__':
         'Temp': ('1', '30'),
         'Seed': [str(i) for i in range(1, 61)]
     }
-    sim = Simulation.from_dict(sample_dict)
-
-    #print(sim._RootDir)
-    #print(sim.full_name)
-    #print([seed.Seed for seed in sim.seeds])
-    #for seed in sim.seeds:
-        #print(seed.full_name)
-    #print(sim.path)
-    #print(sim.Set)
-    #print([seed.full_name for seed in sim.seeds])
+    #sim = Simulation.from_dict(sample_dict)
