@@ -2,7 +2,7 @@ import os
 import numpy as np
 from collections import OrderedDict
 
-from dlm.origami.cadnano import Cadnano
+from dlm.origami.cadnano import Cadnano, check_terminal
 from dlm.origami.helix import Helix
 from dlm.origami.staple import Staple
 from dlm.origami.domain import Domain
@@ -75,17 +75,17 @@ class Pool:
         self._staples, self._domains, self._crossovers = list(), list(), list()
         self.create_staples_domains_crossovers()
         self.link_staples_domains_crossovers()
-        self.fill_domain_attributes() 
+        self.fill_domain_attributes()
         # needs domain nucleotides to be set.
-        self.reorder_domains_staples_crossovers() 
+        self.reorder_domains_staples_crossovers()
         # needs domains to have idxLow (which they do after initialisation)
-        self._helices = self.create_helices() 
+        self._helices = self.create_helices()
         # needs domains to be ordered
-        self._vertices = self.create_vertices() 
+        self._vertices = self.create_vertices()
         self._seam_domains, self._edge_domains = self.fill_actual_edges()
         self.fill_crossover_types()
         # maps column id to cadnano column (a,b), where a is beginning of the column and b is the end
-        self._column_id_to_cadnano_col = {} 
+        self._column_id_to_cadnano_col = {}
         self._edge_column_ids = list() # integer ids of the edge columns
         self._seam_column_ids = list() # integer ids of the seam columns (includes broken seams)
         self.find_column_ids() # sets the above three attributes
@@ -106,22 +106,22 @@ class Pool:
         # some seam staple path continue at the seam so need to add a crossover location for them.
         seam_df = self._cadnano.seam_df
         # some single-domain staples stop at the seam so need to handle this case.
-        is_terminal_location = self._cadnano.staple_df.map(lambda x: -1 in x)
+        is_terminal_location = self._cadnano.staple_df.map(check_terminal)
         for staple_index, staple_path in enumerate(staple_paths):
             staple = Staple(staple_index, staple_path)
             cross_positions = [
-                pos for pos in staple_path 
-                if cross_df.loc[pos] 
+                pos for pos in staple_path
+                if cross_df.loc[pos]
                 or (seam_df.loc[pos] & (is_terminal_location.loc[pos] == False))]
             cross_position_indices = [staple_path.index(pos) for pos in cross_positions]
             if len(cross_positions) % 2 != 0:
                 raise ValueError('The number of crossover positions is not even.')
-            if len(cross_positions) > 4:
-                raise ValueError('The number of crossover positions is greater than 4.')
+            # if len(cross_positions) > 4:
+            #     raise ValueError('The number of crossover positions is greater than 4.')
             domain_position_indices = [0]+cross_position_indices+[len(staple_path)-1]
             domain_staple_index = 0
             for i in range(0, len(domain_position_indices), 2):
-                start, end = (domain_position_indices[i], domain_position_indices[i+1])    
+                start, end = (domain_position_indices[i], domain_position_indices[i+1])
                 domain_path = staple_path[start:end+1]
                 domain = Domain(domain_path, domain_staple_index)
                 domain_staple_index += 1
@@ -181,7 +181,7 @@ class Pool:
             for crossover in staple.crossovers:
                 crossover.set_staple(staple)
     # end def
-                
+
     def fill_domain_attributes(self):
         """
         Fills the attributes of the domains in the pool.
@@ -206,14 +206,14 @@ class Pool:
             domain.set_length(domain_length)
             domain.set_domain_type(domain_type)
     # end def
-            
+
     def reorder_domains_staples_crossovers(self):
         self.domains.sort(key=lambda domain: domain.n1)
         for i, domain in enumerate(self._domains):
             domain.set_index_on_scaffold(i)
         self.staples.sort(key=lambda st: np.min([dom.ind for dom in st.domains]))
         for i, staple in enumerate(self.staples):
-            staple.set_index(i)      
+            staple.set_index(i)
         self.crossovers.sort(key=lambda cr: cr.staple.ind)
         for i, crossover in enumerate(self.crossovers):
             crossover.set_index(i)
@@ -225,7 +225,7 @@ class Pool:
             for i, crossover in enumerate(staple.crossovers):
                 crossover.set_index_on_staple(i)
     # end def
-    
+
     def create_helices(self):
         """
         Adds the helices to the pool.
@@ -319,7 +319,7 @@ class Pool:
             if cross.is_long and cross.type != 'l':
                 raise ValueError(f'Long crossover with type {cross.type} found.')
     # end def
-                
+
     def find_column_ids(self):
         """
         Fills in values for:
@@ -329,7 +329,7 @@ class Pool:
         """
         seam_df = self._cadnano.seam_df
         edge_df = self._cadnano.edge_df
-        vertex_df = self._cadnano.vertex_df 
+        vertex_df = self._cadnano.vertex_df
         column_edges = sorted(vertex_df.columns[vertex_df.any()].tolist())
         cadnano_cols = list(zip(column_edges[:-1], column_edges[1:]))
         cadnano_cols = [a for a in cadnano_cols if abs(a[0]-a[1]) > 1]
@@ -433,7 +433,7 @@ class Pool:
             list: A list of Staple objects.
         """
         return self._staples
-    
+
     @property
     def domains(self):
         """
@@ -443,7 +443,7 @@ class Pool:
             list: A list of Domain objects.
         """
         return self._domains
-    
+
     @property
     def crossovers(self):
         """
@@ -453,7 +453,7 @@ class Pool:
             list: A list of Crossover objects.
         """
         return self._crossovers
-    
+
     @property
     def vertices(self):
         """
@@ -473,7 +473,7 @@ class Pool:
             dict: A dictionary mapping the column ID to the Cadnano column.
         """
         return self._column_id_to_cadnano_col
-    
+
     @property
     def col_idxs(self):
         """
@@ -490,7 +490,7 @@ class Pool:
             list: A list of column IDs of the edge domains.
         """
         return self._edge_column_ids
-    
+
     @property
     def edge_cols(self):
         """
@@ -514,7 +514,7 @@ class Pool:
         Legacy function. Returns _seam_column_ids.
         """
         return self._seam_column_ids
-    
+
     @property
     def seam_domains(self):
         """
@@ -530,7 +530,7 @@ class Pool:
         Legacy function. Returns _seam_domains.
         """
         return self._seam_domains
-    
+
     @property
     def edge_domains(self):
         """
@@ -546,7 +546,7 @@ class Pool:
         Legacy function. Returns _edge_domains.
         """
         return self._edge_domains
-    
+
     @property
     def cross_pairs(self):
         """
@@ -592,7 +592,7 @@ class Pool:
     @property
     def PoolName(self):
         return self._json_file_path
-    
+
     @property
     def ActualPoolName(self):
         return self._json_file_path.split('/')[-1].split('.')[0]
@@ -878,7 +878,7 @@ class Pool:
         ax.set_axis_off()
 
     ### File Writers ###
-    
+
     def help_top(self,myfile):
         myfile.write('{'+self.ActualPoolName+'\n')
         myfile.write('\t[Specifications\n')

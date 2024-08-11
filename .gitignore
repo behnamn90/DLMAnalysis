@@ -23,3 +23,5 @@ demo_output/
 input/
 dlm/origami/abstract_object.py
 
+# pyenv
+.python-version
