@@ -1,7 +1,26 @@
 import json
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import warnings
+
+def check_break(x):
+    if isinstance(x, list) or isinstance(x, np.ndarray):
+        if not any(pd.isna(x)):
+            return np.array_equal(x[:2], [-1, -1])
+    return False
+
+def check_cross(x):
+    if isinstance(x, list) or isinstance(x, np.ndarray):
+        if not any(pd.isna(x)):
+            return x[0] != x[2] and -1 not in x
+    return False
+
+def check_terminal(x):
+    if isinstance(x, list) or isinstance(x, np.ndarray):
+        if not any(pd.isna(x)):
+            return -1 in x
+    return False
 
 def parse_json_data(vstrands_data):
     """
@@ -11,7 +30,7 @@ def parse_json_data(vstrands_data):
         - vstrand['scaf'] is a list of [from_helix, from_col, to_helix, to_col]
         - vstrand['stap'] is a list of [from_helix, from_col, to_helix, to_col]
         Each [from_helix, from_col, to_helix, to_col] location in the 2D list of vstrands_data is the grid point in cadnano.
-        - vstrand['num'] is the row number of the vstrand in cadnano 
+        - vstrand['num'] is the row number of the vstrand in cadnano
     Returns:
         tuple: A tuple containing three dataframes - scaffold_df, staple_df, and skip_df.
     """
@@ -176,10 +195,10 @@ class Cadnano:
         Returns:
             tuple: A tuple containing the scaffold path and a list of staple paths.
         """
-        scaffold_starts = self._scaffold_df.map(lambda x: x[:2] == [-1, -1]).stack()[lambda x: x].index.tolist()
+        scaffold_starts = self._scaffold_df.map(check_break).stack()[lambda x: x].index.tolist()
         scaffold_paths = [follow_path(self._scaffold_df, start) for start in scaffold_starts]
         assert len(scaffold_paths) == 1, 'There should be only one scaffold path'
-        staple_starts = self._staple_df.map(lambda x: x[:2] == [-1, -1]).stack()[lambda x: x].index.tolist()
+        staple_starts = self._staple_df.map(check_break).stack()[lambda x: x].index.tolist()
         staple_paths = [follow_path(self._staple_df, start) for start in staple_starts]
         return scaffold_paths[0], staple_paths
     # end def
@@ -230,15 +249,20 @@ class Cadnano:
             edge_df (pandas.DataFrame): A dataframe representing scaffold crossovers with True values for edge crossovers.
         """
         # Find all scaffold crossovers
-        scaffold_cross_df = self._scaffold_df.map(lambda x: x[0] != x[2] and -1 not in x)
+        scaffold_cross_df = self._scaffold_df.map(check_cross)
         # Find the edge columns and set to False in seam_df
-        cols = scaffold_cross_df.columns.tolist()
-        edge_cols = (min(cols), max(cols))
-        seam_df = scaffold_cross_df.copy()
-        seam_df.loc[:, edge_cols[0]] = False
-        seam_df.loc[:, edge_cols[1]] = False
+        def set_edges_off(row):
+            true_indices = row[row == True].index.tolist()
+            if len(true_indices) > 0:
+                # Set the first True value to False
+                row[true_indices[0]] = False
+                # Set the last True value to False
+                if len(true_indices) > 1:
+                    row[true_indices[-1]] = False
+            return row
+        seam_df = scaffold_cross_df.copy().apply(set_edges_off, axis=1)
         # Do a bitwise compare to get the edge_df
-        edge_df = scaffold_cross_df ^ seam_df        
+        edge_df = scaffold_cross_df ^ seam_df
         return seam_df, edge_df
     # end def
 
@@ -249,7 +273,7 @@ class Cadnano:
         The returned DataFrame has the same shape as the staple DataFrame, with True values indicating
         that some staple strand has a crossover, and False values indicating no crossover.
         """
-        staple_cross_df = self._staple_df.map(lambda x: x[0] != x[2] and -1 not in x)
+        staple_cross_df = self._staple_df.map(check_cross)
         return staple_cross_df
     # end def
 
@@ -261,7 +285,7 @@ class Cadnano:
             pandas.DataFrame: A DataFrame indicating whether there is a vertex at each location.
         """
         # find locations where the staples start or end
-        terminal_locations = self._staple_df.map(lambda x: -1 in x)
+        terminal_locations = self._staple_df.map(check_terminal)
         # combine with all crossover locations
         vertex_df = self.staple_crossover_df | self.seam_df | self.edge_df | terminal_locations
         return vertex_df
@@ -354,4 +378,3 @@ class Cadnano:
 if __name__ == '__main__':
     file_path = '/Users/behnamnajafi/Code/DLM/DLM2/Run/Input/JSONs/RcS.json'
     cadnano = Cadnano.from_json(file_path)
-    
